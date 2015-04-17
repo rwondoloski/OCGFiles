@@ -1,0 +1,48 @@
+import time, serial, os
+
+ser = serial.Serial(
+    port='/dev/modem_at0',
+    baudrate=115200,
+    parity=serial.PARITY_NONE,
+    stopbits=serial.STOPBITS_ONE,
+    bytesize=serial.EIGHTBITS)
+    
+ser.open()
+ser.isOpen()
+
+ser.flushInput()
+ser.flushOutput()
+
+#Set the AT command interface style to suite the HE910
+ser.write('AT#SELINT=2' + '\r\n')	
+time.sleep(1)
+
+#Deactivate Context
+ser.write('AT#SGACT=1,0' + '\r\n')
+time.sleep(1)
+
+#Define PDP Context
+ser.write('AT+CGDCONT=1, "IP","neo.iot.net"' + '\r\n')
+time.sleep(1)
+
+#Skip the escape sequence
+ser.write('AT#SKIPESC=1' + '\r\n')
+time.sleep(1)
+
+#Configure the socket
+ser.write('AT#SCFG=1,1,300,90,60,50' + '\r\n')
+time.sleep(1)
+
+#Signal measurement -- 2..30 - (-109)dBm..(-53)dBm / 2 dBm per step
+ser.write('AT+CSQ' + '\r\n')
+time.sleep(2)
+n = ser.inWaiting()
+print ser.read(n)
+
+#Activate the context
+ser.write('AT#SGACT=1,1' + '\r\n')
+time.sleep(8)
+n = ser.inWaiting()
+print ser.read(n)
+
+
